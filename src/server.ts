@@ -1,6 +1,11 @@
 import express from 'express';
 import bodyParser from 'body-parser';
+import { Router, Request, Response } from 'express';
 import {filterImageFromURL, deleteLocalFiles} from './util/util';
+
+
+const StatusBadRequest = 400;
+const StatusOK = 200;
 
 (async () => {
 
@@ -37,6 +42,17 @@ import {filterImageFromURL, deleteLocalFiles} from './util/util';
     res.send("try GET /filteredimage?image_url={{}}")
   } );
   
+  app.get("/filteredimage", async (req: Request, res: Response) => {
+    const imageUrl = req.query.image_url.toString();
+    if (!imageUrl) {
+      res.status(StatusBadRequest).send("Image url is required!");
+    }
+
+    const filteredImage = await filterImageFromURL(imageUrl)
+    res.status(StatusOK).sendFile(filteredImage, () => {
+      deleteLocalFiles([filteredImage])
+    });
+  })
 
   // Start the Server
   app.listen( port, () => {
